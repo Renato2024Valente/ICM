@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Média ICM</title>
+  <style>
+    :root {
+      --fundo:#080b10; --painel:#111722; --painel2:#171f2c;
+      --borda:#293446; --texto:#f3f7fb; --suave:#9eacbf;
+      --azul:#4ba3ff; --verde:#41d69a; --vermelho:#ff6b78;
+    }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; color:var(--texto);
+      font-family:Arial,Helvetica,sans-serif;
+      background:radial-gradient(circle at 10% 0%,rgba(23,119,211,.18),transparent 35rem),var(--fundo);
+    }
+    button,input,textarea { font:inherit }
+    button { cursor:pointer }
+    .pagina { width:min(1180px,calc(100% - 32px)); margin:auto; padding:46px 0 28px }
+    .hero { display:flex; justify-content:space-between; align-items:flex-end; gap:32px; margin-bottom:28px }
+    .selo { display:inline-block; margin-bottom:13px; color:var(--azul); font-size:12px; font-weight:800; letter-spacing:.16em }
+    h1,h2,p { margin-top:0 }
+    h1 { margin-bottom:12px; font-size:clamp(34px,5vw,58px); letter-spacing:-.045em }
+    .hero p { max-width:690px; margin-bottom:0; color:var(--suave); font-size:17px; line-height:1.6 }
+    .regra { min-width:210px; padding:16px 18px; border:1px solid var(--borda); border-radius:16px; background:rgba(17,23,34,.78) }
+    .regra strong,.regra span { display:block }
+    .regra strong { margin-bottom:5px; color:var(--verde); font-size:13px }
+    .regra span { color:var(--suave); font-size:13px }
+    .resultados { display:grid; grid-template-columns:1.2fr repeat(3,1fr); gap:12px; margin-bottom:18px }
+    .resultado { padding:22px; border:1px solid var(--borda); border-radius:18px; background:linear-gradient(145deg,var(--painel2),var(--painel)) }
+    .resultado span,.resultado strong { display:block }
+    .resultado span { margin-bottom:9px; color:var(--suave); font-size:13px; font-weight:700 }
+    .resultado strong { font-size:31px; letter-spacing:-.035em }
+    .resultado.destaque { border-color:rgba(75,163,255,.65); box-shadow:inset 0 0 35px rgba(75,163,255,.08) }
+    .resultado.destaque strong { color:var(--azul) }
+    .painel { margin-top:18px; padding:24px; border:1px solid var(--borda); border-radius:20px; background:rgba(17,23,34,.92); box-shadow:0 20px 55px rgba(0,0,0,.22) }
+    .painel-cabecalho { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:20px }
+    .painel-cabecalho h2 { margin-bottom:6px; font-size:20px }
+    .painel-cabecalho p { margin-bottom:0; color:var(--suave); font-size:14px }
+    .acoes { display:flex; gap:8px }
+    .botao,.adicionar { border:1px solid transparent; border-radius:10px; padding:11px 15px; color:white; font-weight:800 }
+    .secundario { border-color:#34628d; background:#183754 }
+    .perigo { border-color:#663039; background:#351a20; color:#ff9ca4 }
+    .importar { border-color:#287d62; background:#15523f }
+    .colar { border-color:#4c5871; background:#252e40 }
+    .adicionar { width:100%; margin-top:12px; border-style:dashed; border-color:#3a5878; background:#14263a; color:#8fc8ff }
+    .botao:hover,.adicionar:hover { filter:brightness(1.15) }
+    .importador { margin-bottom:18px; padding:14px; border:1px solid #27364a; border-radius:13px; background:#0c131e }
+    .importador-acoes { display:flex; align-items:center; gap:9px; flex-wrap:wrap }
+    .importador-acoes span { color:var(--suave); font-size:12px }
+    .arquivo-oculto { display:none }
+    .area-colagem { display:none; gap:9px; margin-top:14px }
+    .area-colagem.aberta { display:grid }
+    .area-colagem label { color:#dce8f5; font-size:13px; font-weight:800 }
+    .area-colagem textarea { width:100%; min-height:135px; resize:vertical; border:1px solid #344156; border-radius:9px; outline:none; padding:12px; background:#080d15; color:var(--texto); line-height:1.45 }
+    .area-colagem textarea:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(75,163,255,.12) }
+    .area-colagem .botao { justify-self:start }
+    .mensagem-importacao { margin:11px 0 0; color:var(--verde); font-size:13px }
+    .formulas-gerais { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px }
+    .formulas-gerais article { padding:16px; border:1px solid #2c3c51; border-radius:13px; background:#0d141f }
+    .formulas-gerais span,.formulas-gerais strong { display:block }
+    .formulas-gerais span { margin-bottom:8px; color:var(--azul); font-size:12px; font-weight:800; text-transform:uppercase }
+    .formulas-gerais strong { min-height:42px; color:#edf6ff; font-size:15px; line-height:1.4 }
+    .formulas-gerais p { margin:10px 0 0; color:var(--suave); font-size:12px; line-height:1.45 }
+    .etapas-calculo { display:grid; gap:14px }
+    .etapa-calculo { padding:18px; border-left:3px solid var(--azul); border-radius:0 13px 13px 0; background:#0b111a }
+    .etapa-calculo.nota-detalhada { border-left-color:var(--verde) }
+    .etapa-titulo { display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+    .etapa-titulo span { padding:4px 7px; border-radius:6px; background:#173c60; color:#a8d5ff; font-size:10px; font-weight:900; letter-spacing:.08em }
+    .nota-detalhada .etapa-titulo span { background:#164b3a; color:#9ff0cf }
+    .etapa-titulo h3 { margin:0; font-size:17px }
+    .explicacao-etapa { margin:9px 0 14px; color:var(--suave); font-size:13px }
+    .contas-periodos { display:grid; gap:9px }
+    .conta-periodo { padding:13px 14px; border:1px solid #263347; border-radius:10px; background:#080d14 }
+    .conta-periodo strong,.conta-periodo code,.conta-periodo span { display:block }
+    .conta-periodo strong { margin-bottom:8px; color:#dcecff }
+    .conta-periodo span { margin-top:8px; color:var(--suave); font-size:11px }
+    .conta-periodo code,.equacao-final { overflow-wrap:anywhere; color:#9ff0cf; font-family:Consolas,"Courier New",monospace; font-size:14px; line-height:1.6 }
+    .equacao-final { display:block; padding:13px 14px; border:1px solid #285643; border-radius:10px; background:#08150f; font-size:16px }
+    .painel-farol { --cor-farol:#46c760; border-color:#356b48; background:radial-gradient(circle at 100% 0%,rgba(70,199,96,.12),transparent 28rem),rgba(17,23,34,.95) }
+    .painel-farol.vermelho { --cor-farol:#ff5364; border-color:#753741; background:radial-gradient(circle at 100% 0%,rgba(255,83,100,.12),transparent 28rem),rgba(17,23,34,.95) }
+    .painel-farol.amarelo { --cor-farol:#ffc83d; border-color:#756229; background:radial-gradient(circle at 100% 0%,rgba(255,200,61,.12),transparent 28rem),rgba(17,23,34,.95) }
+    .painel-farol.sem-resultado { --cor-farol:#7f8b9b; border-color:#455063; background:rgba(17,23,34,.95) }
+    .selo-farol { display:inline-block; margin-bottom:8px; color:var(--cor-farol); font-size:11px; font-weight:900; letter-spacing:.14em }
+    .farol-conteudo { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:24px; align-items:stretch }
+    .seletor-bonus { display:flex; align-items:center; gap:11px; margin-bottom:12px; padding:12px 14px; border:1px solid #33445a; border-radius:12px; background:#0b131e; cursor:pointer }
+    .seletor-bonus input { width:18px; min-width:18px; height:18px; accent-color:var(--azul) }
+    .seletor-bonus span,.seletor-bonus strong,.seletor-bonus small { display:block }
+    .seletor-bonus strong { color:#e4eef8; font-size:13px }
+    .seletor-bonus small { margin-top:3px; color:var(--suave); font-size:11px }
+    .aviso-entrada-farol { margin:-2px 0 12px; padding:9px 11px; border-radius:9px; background:#191f2b; color:#b9c7d8; font-size:11px; line-height:1.45 }
+    .campos-farol { display:grid; grid-template-columns:repeat(5,minmax(130px,1fr)); gap:9px }
+    .campos-farol>label { display:flex; flex-direction:column; gap:8px; min-width:0; padding:13px; border:1px solid #2d3a4e; border-radius:12px; background:#0c121c }
+    .campos-farol>label>span { min-height:32px; color:#cfdaea; font-size:12px; font-weight:800; line-height:1.35 }
+    .campos-farol .campo-automatico { border-color:#2e698d; background:#0c1b28 }
+    .campos-farol small { min-height:27px; color:var(--suave); font-size:10px; line-height:1.35 }
+    .campo-automatico small { color:#80bce8 }
+    .entrada-percentual { position:relative }
+    .entrada-percentual input { padding-right:34px; font-size:17px; font-weight:800 }
+    .entrada-percentual b { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--suave); font-size:12px }
+    .campo-automatico input { color:#7fc7ff; cursor:not-allowed }
+    .conta-farol { margin-top:12px; padding:15px; border:1px solid #2d3a4e; border-radius:12px; background:#080d14 }
+    .conta-farol span,.conta-farol code { display:block }
+    .conta-farol span { margin-bottom:8px; color:var(--suave); font-size:11px; font-weight:800; text-transform:uppercase }
+    .conta-farol code { color:#dcecff; font-family:Consolas,"Courier New",monospace; font-size:16px; line-height:1.55 }
+    .conta-farol p { margin:0; color:#ff9ca4; font-size:13px }
+    .configuracao-farol { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px 14px; border:1px dashed #3a485d; border-radius:12px }
+    .configuracao-farol>strong { color:#d9e5f2; font-size:12px }
+    .configuracao-farol>label { display:flex; align-items:center; gap:7px; color:var(--suave); font-size:11px }
+    .entrada-limite { position:relative; width:72px }
+    .entrada-limite input { min-width:0; padding:7px 24px 7px 8px }
+    .entrada-limite span { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--suave); font-size:11px }
+    .configuracao-farol p { flex-basis:100%; margin:0; color:#7f8ca0; font-size:10px; line-height:1.5 }
+    .resultado-farol { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:315px; padding:20px; border:1px solid #355747; border-radius:17px; background:#0a1210; text-align:center }
+    .semaforo { display:grid; gap:8px; margin-bottom:17px; padding:11px; border:3px solid #303949; border-radius:28px; background:#090c11; box-shadow:0 8px 22px rgba(0,0,0,.35) }
+    .luz { width:38px; height:38px; border-radius:50%; opacity:.16; box-shadow:inset 0 -5px 8px rgba(0,0,0,.35) }
+    .luz.vermelho { color:#ff354d; background:#ff354d }
+    .luz.amarelo { color:#ffd23f; background:#ffd23f }
+    .luz.verde { color:#45d063; background:#45d063 }
+    .luz.acesa { opacity:1; box-shadow:0 0 24px currentColor,inset 0 -5px 8px rgba(0,0,0,.22) }
+    .resultado-farol>span { color:var(--suave); font-size:12px; font-weight:800 }
+    .resultado-farol>strong { margin:6px 0; color:var(--cor-farol); font-size:36px; letter-spacing:-.04em }
+    .resultado-farol>b { color:var(--cor-farol); font-size:13px; letter-spacing:.12em }
+    .tabela-wrap { overflow-x:auto }
+    table { width:100%; border-collapse:collapse }
+    th { padding:10px; color:var(--suave); font-size:12px; text-align:left; text-transform:uppercase; letter-spacing:.06em }
+    td { padding:6px; border-top:1px solid #202b3b }
+    th:first-child { width:42% }
+    th:last-child { width:44px }
+    input { width:100%; min-width:90px; padding:11px 12px; border:1px solid #344156; border-radius:9px; outline:none; background:#0c111a; color:var(--texto) }
+    input:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(75,163,255,.12) }
+    input::placeholder { color:#59677a }
+    .excluir button { width:34px; height:34px; border:0; border-radius:9px; background:transparent; color:#728197; font-size:24px; line-height:1 }
+    .excluir button:hover { background:#351a20; color:var(--vermelho) }
+    .lista-periodos { display:grid; gap:9px }
+    .periodo-item { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:15px 17px; border:1px solid #293446; border-radius:12px; background:#0d131d }
+    .periodo-item strong,.periodo-item span { display:block }
+    .periodo-item strong { margin-bottom:5px }
+    .periodo-item span { color:var(--suave); font-size:12px }
+    .periodo-item b { color:var(--verde); font-size:21px }
+    .vazio { margin:0; color:var(--suave) }
+    footer { padding:22px 4px 0; color:#718096; font-size:12px; line-height:1.6; text-align:center }
+    @media(max-width:800px) {
+      .pagina { width:min(100% - 20px,700px); padding-top:28px }
+      .hero { align-items:stretch; flex-direction:column }
+      .regra { min-width:0 }
+      .resultados { grid-template-columns:1fr 1fr }
+      .painel { padding:16px }
+      .painel-cabecalho { align-items:stretch; flex-direction:column }
+      .acoes .botao { flex:1 }
+      .importador-acoes .botao { flex:1 }
+      .importador-acoes span { flex-basis:100% }
+      .formulas-gerais { grid-template-columns:1fr }
+      .formulas-gerais strong { min-height:0 }
+      .farol-conteudo { grid-template-columns:1fr }
+      .campos-farol { grid-template-columns:1fr 1fr }
+      .resultado-farol { min-height:0 }
+      .semaforo { grid-template-columns:repeat(3,1fr) }
+    }
+    @media(max-width:570px) {
+      .resultados { grid-template-columns:1fr }
+      .resultado { padding:18px }
+      table,thead,tbody,tr,td { display:block }
+      thead { display:none }
+      tr { margin-bottom:13px; padding:10px; border:1px solid #293446; border-radius:13px; background:#0c111a }
+      td { display:grid; grid-template-columns:90px 1fr; align-items:center; gap:8px; border:0; padding:5px }
+      td::before { content:attr(data-label); color:var(--suave); font-size:12px; font-weight:800 }
+      td.excluir { display:flex; justify-content:flex-end }
+      .excluir button { background:#25171c; color:#ff8993 }
+      .periodo-item { align-items:flex-start }
+      .campos-farol { grid-template-columns:1fr }
+    }
+  </style>
+</head>
+<body>
+  <main class="pagina">
+    <section class="hero">
+      <div>
+        <span class="selo">SEDUC • CÁLCULO PONDERADO</span>
+        <h1>Calculadora de Média ICM</h1>
+        <p>Preencha Período, Dias, Peso e ICM. Linhas com o mesmo período serão agrupadas automaticamente.</p>
+      </div>
+      <div class="regra"><strong>ICM aceito</strong><span>0,50 ou 50 = 50%</span></div>
+    </section>
+
+    <section class="resultados" aria-live="polite">
+      <article class="resultado destaque"><span>Média final</span><strong id="mediaFinal">0,00%</strong></article>
+      <article class="resultado"><span>Nota de 0 a 5</span><strong id="notaFinal">0,00</strong></article>
+      <article class="resultado"><span>Diferença</span><strong id="faltaOuro">5,00</strong></article>
+      <article class="resultado"><span>Dias considerados</span><strong id="totalDias">0</strong></article>
+    </section>
+
+    <section class="painel">
+      <div class="painel-cabecalho">
+        <div><h2>Como o cálculo é feito</h2><p>Fórmulas e valores substituídos, atualizados automaticamente.</p></div>
+      </div>
+      <div class="formulas-gerais">
+        <article><span>1. Média do período</span><strong>Σ(Peso × ICM%) ÷ Σ(Pesos)</strong><p>Cada peso multiplica o ICM da sua linha.</p></article>
+        <article><span>2. Média final</span><strong>Σ(Média do período × Dias) ÷ Σ(Dias)</strong><p>Períodos mais longos valem mais no resultado.</p></article>
+        <article><span>3. Nota de 0 a 5</span><strong>Média final (%) ÷ 10</strong><p>Exemplo: 45,22% ÷ 10 = 4,52.</p></article>
+      </div>
+      <div id="calculosDetalhados" class="etapas-calculo"></div>
+    </section>
+
+    <section class="painel">
+      <div class="painel-cabecalho">
+        <div><h2>Dados para o cálculo</h2><p>Repita o mesmo período em todas as linhas do mesmo bloco.</p></div>
+        <div class="acoes">
+          <button class="botao secundario" id="meusDados">Meus dados</button>
+          <button class="botao perigo" id="limpar">Limpar</button>
+        </div>
+      </div>
+      <div class="importador">
+        <div class="importador-acoes">
+          <input class="arquivo-oculto" type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv,.tsv,.txt">
+          <button class="botao importar" id="escolherArquivo">Importar Excel/CSV</button>
+          <button class="botao colar" id="abrirColagem">Copiar e colar</button>
+          <span>O arquivo importado substitui as linhas da tabela.</span>
+        </div>
+        <div class="area-colagem" id="areaColagem">
+          <label for="dadosColados">Cole aqui as células copiadas do Excel</label>
+          <textarea id="dadosColados" placeholder="Data Inicio&#9;Data Fim&#9;Qtde Dias&#9;Peso (%)&#9;ICM Calc.&#10;01/01/2025&#9;28/01/2025&#9;28&#9;25%&#9;0,5"></textarea>
+          <button class="botao importar" id="processarColagem">Usar dados colados</button>
+        </div>
+        <p class="mensagem-importacao" id="mensagemImportacao" role="status"></p>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Período</th><th>Dias</th><th>Peso (%)</th><th>ICM</th><th></th></tr></thead>
+          <tbody id="linhas"></tbody>
+        </table>
+      </div>
+      <button class="adicionar" id="adicionar">+ Adicionar linha</button>
+    </section>
+
+    <section class="painel">
+      <div class="painel-cabecalho">
+        <div><h2>Resultado por período</h2><p>A média final considera a quantidade de dias de cada período.</p></div>
+      </div>
+      <div id="listaPeriodos" class="lista-periodos"></div>
+    </section>
+
+    <section class="painel painel-farol verde" id="painelFarol">
+      <div class="painel-cabecalho">
+        <div><span class="selo-farol">RESULTADO FINAL</span><h2>Farol de desempenho</h2><p>Digite as notas de 0 a 100. O programa aplica os pesos e traz o Atingimento de Metas automaticamente do ICM.</p></div>
+      </div>
+      <div class="farol-conteudo">
+        <div>
+          <label class="seletor-bonus"><input type="checkbox" id="temBonus" checked><span><strong>Painel com indicador de bônus</strong><small id="descricaoBonus">Diário: 60% • Atingimento de Metas: 10%</small></span></label>
+          <p class="aviso-entrada-farol">Digite a nota antes do peso. Exemplo: se o painel mostra 9,28 em um indicador de peso 10%, a nota original é 92,80.</p>
+          <div class="campos-farol">
+            <label><span>Diário de Classe</span><div class="entrada-percentual"><input class="input-farol" id="notaDiario" inputmode="decimal" value="100,00"><b>%</b></div><small id="detalheDiario">Peso: 60% • Valor no painel: 60,00</small></label>
+            <label><span>Formação</span><div class="entrada-percentual"><input class="input-farol" id="notaFormacao" inputmode="decimal" value="100,00"><b>%</b></div><small id="detalheFormacao">Peso: 10% • Valor no painel: 10,00</small></label>
+            <label class="campo-automatico"><span>Atingimento de Metas</span><div class="entrada-percentual"><input id="notaAtingimento" value="0,00" readonly aria-readonly="true"><b>%</b></div><small id="detalheMetas">Automático: resultado do ICM</small></label>
+            <label><span>Avaliação dos Estudantes</span><div class="entrada-percentual"><input class="input-farol" id="notaEstudantes" inputmode="decimal" value="92,80"><b>%</b></div><small id="detalheEstudantes">Peso: 10% • Valor no painel: 9,28</small></label>
+            <label><span>Avaliação do Trio Gestor</span><div class="entrada-percentual"><input class="input-farol" id="notaTrio" inputmode="decimal" value="63,30"><b>%</b></div><small id="detalheTrio">Peso: 10% • Valor no painel: 6,33</small></label>
+          </div>
+          <div class="conta-farol"><span>Conta do resultado</span><code id="equacaoFarol">Aguardando o cálculo.</code><p id="erroFarol" hidden>Preencha todas as notas obrigatórias de 0 a 100.</p></div>
+          <div class="configuracao-farol">
+            <strong>Faixas oficiais do farol</strong>
+            <p>Vermelho: abaixo de 50% • Amarelo: de 50% a 79,99% • Verde: 80% ou mais. Se faltar uma nota obrigatória, o farol não é gerado.</p>
+          </div>
+        </div>
+        <aside class="resultado-farol" aria-live="polite">
+          <div class="semaforo" id="semaforo" aria-label="Farol verde">
+            <span class="luz vermelho"></span><span class="luz amarelo"></span><span class="luz verde acesa"></span>
+          </div>
+          <span>Total do Farol</span><strong id="totalFarol">—</strong><b id="corFarol">PREENCHA AS NOTAS</b>
+        </aside>
+      </div>
+    </section>
+
+    <footer>Fórmula: média do período = Σ(Peso × ICM) ÷ Σ(Pesos). Média final = Σ(Média do período × Dias) ÷ Σ(Dias).</footer>
+  </main>
+
+  <script>
+    const exemplo = [
+      ["01/01 a 28/01","28","25","0,50"],["01/01 a 28/01","28","75","0,06"],
+      ["01/01 a 28/01","28","60","0,50"],["01/01 a 28/01","28","40","0,50"],
+      ["29/01 a 30/06","153","100","0,50"],["29/01 a 30/06","153","60","0,50"],
+      ["29/01 a 30/06","153","15","0"],["29/01 a 30/06","153","25","0,50"],
+      ["01/07 a 12/12","165","100","0,50"],["01/07 a 12/12","165","60","0,50"],
+      ["01/07 a 12/12","165","15","0"],["01/07 a 12/12","165","25","0,50"]
+    ];
+
+    const corpo = document.getElementById("linhas");
+    const numero = valor => {
+      const texto = String(valor).trim().replace(/\s/g,"").replace(/%/g,"");
+      if (!texto) return Number.NaN;
+      return Number(texto.includes(",") ? texto.replace(/\./g,"").replace(",",".") : texto);
+    };
+    const icmPercentual = valor => {
+      const n = numero(valor);
+      return n <= 1 ? n * 100 : n;
+    };
+    const decimal = valor => valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+    const numeroConta = valor => valor.toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:2});
+
+    const texto = valor => String(valor ?? "").trim();
+    const normalizarCabecalho = valor => texto(valor)
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .toLowerCase().replace(/[^a-z0-9]/g,"");
+
+    function separarTextoTabular(conteudo) {
+      const primeiraLinha = conteudo.split(/\r?\n/).find(linha => linha.trim()) || "";
+      const separador = primeiraLinha.includes("\t") ? "\t" : primeiraLinha.includes(";") ? ";" : ",";
+      const matriz = [];
+      let linha = [], celula = "", entreAspas = false;
+      for (let i=0; i<conteudo.length; i++) {
+        const caractere = conteudo[i];
+        if (caractere === '"') {
+          if (entreAspas && conteudo[i+1] === '"') { celula += '"'; i++; }
+          else entreAspas = !entreAspas;
+        } else if (caractere === separador && !entreAspas) {
+          linha.push(celula.trim()); celula = "";
+        } else if ((caractere === "\n" || caractere === "\r") && !entreAspas) {
+          if (caractere === "\r" && conteudo[i+1] === "\n") i++;
+          linha.push(celula.trim());
+          if (linha.some(valor => valor !== "")) matriz.push(linha);
+          linha = []; celula = "";
+        } else celula += caractere;
+      }
+      linha.push(celula.trim());
+      if (linha.some(valor => valor !== "")) matriz.push(linha);
+      return matriz;
+    }
+
+    function matrizParaLinhas(matrizOriginal) {
+      const matriz = matrizOriginal.filter(linha => linha.some(valor => texto(valor) !== ""));
+      if (!matriz.length) return [];
+      const cabecalhos = matriz[0].map(normalizarCabecalho);
+      const indice = (...nomes) => cabecalhos.findIndex(cabecalho => nomes.includes(cabecalho));
+      const colunas = {
+        periodo:indice("periodo","periodoreferencia","competencia"),
+        inicio:indice("datainicio","dtinicio","inicio"),
+        fim:indice("datafim","dtfim","fim"),
+        dias:indice("qtdedias","quantidadedias","dias"),
+        peso:indice("peso","pesopercentual","pesoporcentagem"),
+        icm:indice("icmcalc","icmcalculado","icm")
+      };
+      const temCabecalho = colunas.dias >= 0 && colunas.peso >= 0 && colunas.icm >= 0 &&
+        (colunas.periodo >= 0 || colunas.inicio >= 0 || colunas.fim >= 0);
+      if (!temCabecalho) {
+        return matriz.filter(linha => linha.length >= 4)
+          .map(linha => [texto(linha[0]),texto(linha[1]),texto(linha[2]),texto(linha[3])])
+          .filter(linha => linha.some(Boolean));
+      }
+      return matriz.slice(1).map(linha => {
+        const inicio = colunas.inicio >= 0 ? texto(linha[colunas.inicio]) : "";
+        const fim = colunas.fim >= 0 ? texto(linha[colunas.fim]) : "";
+        const periodo = colunas.periodo >= 0 ? texto(linha[colunas.periodo]) : "";
+        return [
+          periodo || [inicio,fim].filter(Boolean).join(" a "),
+          texto(linha[colunas.dias]),texto(linha[colunas.peso]),texto(linha[colunas.icm])
+        ];
+      }).filter(linha => linha.some(Boolean));
+    }
+
+    function carregarLeitorExcel() {
+      if (window.XLSX) return Promise.resolve(window.XLSX);
+      return new Promise((resolve,reject) => {
+        const existente = document.querySelector('script[data-leitor-excel="true"]');
+        if (existente) {
+          existente.addEventListener("load",() => window.XLSX ? resolve(window.XLSX) : reject());
+          existente.addEventListener("error",reject);
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        script.dataset.leitorExcel = "true";
+        script.onload = () => window.XLSX ? resolve(window.XLSX) : reject();
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function informar(mensagem) {
+      document.getElementById("mensagemImportacao").textContent = mensagem;
+    }
+
+    function aplicarImportacao(matriz) {
+      const linhas = matrizParaLinhas(matriz);
+      if (!linhas.length) {
+        informar("Não encontrei linhas válidas. Confira os cabeçalhos ou use 4 colunas: Período, Dias, Peso e ICM.");
+        return;
+      }
+      carregar(linhas);
+      informar(linhas.length + " linhas importadas com sucesso.");
+    }
+
+    function criarLinha(dados=["","","",""]) {
+      const tr = document.createElement("tr");
+      const campos = [
+        ["Período","periodo","Ex.: 01/01 a 28/01"],
+        ["Dias","dias","28"],
+        ["Peso (%)","peso","25"],
+        ["ICM","icm","0,50"]
+      ];
+      campos.forEach((campo,i) => {
+        const td = document.createElement("td");
+        td.dataset.label = campo[0];
+        const input = document.createElement("input");
+        input.className = campo[1];
+        input.placeholder = campo[2];
+        input.value = dados[i] || "";
+        input.inputMode = i === 0 ? "text" : "decimal";
+        input.addEventListener("input",calcular);
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+      const td = document.createElement("td");
+      td.className = "excluir";
+      const botao = document.createElement("button");
+      botao.textContent = "×";
+      botao.title = "Excluir linha";
+      botao.setAttribute("aria-label","Excluir esta linha");
+      botao.onclick = () => { tr.remove(); calcular(); };
+      td.appendChild(botao);
+      tr.appendChild(td);
+      corpo.appendChild(tr);
+    }
+
+    function carregar(dados) {
+      corpo.innerHTML = "";
+      dados.forEach(criarLinha);
+      calcular();
+    }
+
+    function calcular() {
+      const grupos = new Map();
+      [...corpo.querySelectorAll("tr")].forEach(tr => {
+        const periodo = tr.querySelector(".periodo").value.trim();
+        const dias = numero(tr.querySelector(".dias").value);
+        const peso = numero(tr.querySelector(".peso").value);
+        const icm = icmPercentual(tr.querySelector(".icm").value);
+        if (!periodo || !Number.isFinite(dias) || dias <= 0) return;
+        if (!Number.isFinite(peso) || peso < 0 || !Number.isFinite(icm) || icm < 0) return;
+        const grupo = grupos.get(periodo) || {periodo,dias,somaPesada:0,somaPesos:0,parcelas:[]};
+        grupo.dias = dias;
+        grupo.somaPesada += peso * icm;
+        grupo.somaPesos += peso;
+        grupo.parcelas.push({peso,icm});
+        grupos.set(periodo,grupo);
+      });
+
+      const periodos = [...grupos.values()]
+        .filter(g => g.somaPesos > 0)
+        .map(g => ({...g,media:g.somaPesada/g.somaPesos}));
+      const dias = periodos.reduce((s,p) => s+p.dias,0);
+      const media = dias ? periodos.reduce((s,p) => s+p.media*p.dias,0)/dias : 0;
+      const nota = media/10;
+
+      document.getElementById("mediaFinal").textContent = decimal(media)+"%";
+      document.getElementById("notaFinal").textContent = decimal(nota);
+      document.getElementById("faltaOuro").textContent = decimal(Math.max(0,5-nota));
+      document.getElementById("totalDias").textContent = dias;
+      atualizarFarol(media,periodos.length>0);
+
+      const detalhes = document.getElementById("calculosDetalhados");
+      detalhes.innerHTML = "";
+      if (!periodos.length) {
+        const vazioCalculo = document.createElement("p");
+        vazioCalculo.className = "vazio";
+        vazioCalculo.textContent = "Preencha ao menos uma linha válida para ver as contas.";
+        detalhes.appendChild(vazioCalculo);
+      } else {
+        const passo1 = document.createElement("div");
+        passo1.className = "etapa-calculo";
+        const titulo1 = document.createElement("div");
+        titulo1.className = "etapa-titulo";
+        const selo1 = document.createElement("span");
+        selo1.textContent = "PASSO 1";
+        const h31 = document.createElement("h3");
+        h31.textContent = "Média de cada período";
+        titulo1.append(selo1,h31);
+        const explicacao1 = document.createElement("p");
+        explicacao1.className = "explicacao-etapa";
+        explicacao1.textContent = "O programa transforma ICM 0,50 em 50% e depois aplica os pesos.";
+        const contas = document.createElement("div");
+        contas.className = "contas-periodos";
+        periodos.forEach(p => {
+          const conta = document.createElement("article");
+          conta.className = "conta-periodo";
+          const nome = document.createElement("strong");
+          nome.textContent = p.periodo;
+          const equacao = document.createElement("code");
+          const parcelas = p.parcelas.map(parcela => numeroConta(parcela.peso)+" × "+numeroConta(parcela.icm)).join(" + ");
+          equacao.textContent = "("+parcelas+") ÷ "+numeroConta(p.somaPesos)+" = "+decimal(p.media)+"%";
+          const resumo = document.createElement("span");
+          resumo.textContent = "Soma dos pesos: "+numeroConta(p.somaPesos)+"% • "+p.dias+" dias";
+          conta.append(nome,equacao,resumo);
+          contas.appendChild(conta);
+        });
+        passo1.append(titulo1,explicacao1,contas);
+
+        const passo2 = document.createElement("div");
+        passo2.className = "etapa-calculo";
+        const titulo2 = document.createElement("div");
+        titulo2.className = "etapa-titulo";
+        const selo2 = document.createElement("span");
+        selo2.textContent = "PASSO 2";
+        const h32 = document.createElement("h3");
+        h32.textContent = "Média final ponderada pelos dias";
+        titulo2.append(selo2,h32);
+        const explicacao2 = document.createElement("p");
+        explicacao2.className = "explicacao-etapa";
+        explicacao2.textContent = "Multiplicamos a média de cada período pela quantidade de dias.";
+        const equacao2 = document.createElement("code");
+        equacao2.className = "equacao-final";
+        equacao2.textContent = "("+periodos.map(p => numeroConta(p.media)+" × "+numeroConta(p.dias)).join(" + ")+") ÷ "+numeroConta(dias)+" = "+decimal(media)+"%";
+        passo2.append(titulo2,explicacao2,equacao2);
+
+        const passo3 = document.createElement("div");
+        passo3.className = "etapa-calculo nota-detalhada";
+        const titulo3 = document.createElement("div");
+        titulo3.className = "etapa-titulo";
+        const selo3 = document.createElement("span");
+        selo3.textContent = "PASSO 3";
+        const h33 = document.createElement("h3");
+        h33.textContent = "Conversão para a nota";
+        titulo3.append(selo3,h33);
+        const explicacao3 = document.createElement("p");
+        explicacao3.className = "explicacao-etapa";
+        explicacao3.textContent = "Como a nota máxima é 5, dividimos o percentual final por 10.";
+        const equacao3 = document.createElement("code");
+        equacao3.className = "equacao-final";
+        equacao3.textContent = numeroConta(media)+"% ÷ 10 = "+decimal(nota);
+        passo3.append(titulo3,explicacao3,equacao3);
+        detalhes.append(passo1,passo2,passo3);
+      }
+
+      const lista = document.getElementById("listaPeriodos");
+      lista.innerHTML = "";
+      if (!periodos.length) {
+        lista.innerHTML = '<p class="vazio">Preencha ao menos uma linha válida.</p>';
+        return;
+      }
+      periodos.forEach(p => {
+        const item = document.createElement("article");
+        item.className = "periodo-item";
+        const bloco = document.createElement("div");
+        const titulo = document.createElement("strong");
+        const detalhe = document.createElement("span");
+        const valor = document.createElement("b");
+        titulo.textContent = p.periodo;
+        detalhe.textContent = p.dias+" dias • pesos somados: "+decimal(p.somaPesos)+"%";
+        valor.textContent = decimal(p.media)+"%";
+        bloco.append(titulo,detalhe);
+        item.append(bloco,valor);
+        lista.appendChild(item);
+      });
+    }
+
+    function atualizarFarol(notaIcm,temResultadoIcm) {
+      const lerNota = id => {
+        const n = numero(document.getElementById(id).value);
+        return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
+      };
+      const temBonus = document.getElementById("temBonus").checked;
+      const diario = lerNota("notaDiario");
+      const formacao = lerNota("notaFormacao");
+      const estudantes = lerNota("notaEstudantes");
+      const trio = lerNota("notaTrio");
+      const pesoDiario = temBonus ? 60 : 70;
+      const pesoMetas = temBonus ? 10 : 0;
+      const pronto = diario !== null && formacao !== null && estudantes !== null && trio !== null && (!temBonus || temResultadoIcm);
+      const valorDiario = diario === null ? 0 : diario*pesoDiario/100;
+      const valorFormacao = formacao === null ? 0 : formacao*10/100;
+      const valorMetas = temBonus ? notaIcm*pesoMetas/100 : 0;
+      const valorEstudantes = estudantes === null ? 0 : estudantes*10/100;
+      const valorTrio = trio === null ? 0 : trio*10/100;
+      const total = pronto ? valorDiario+valorFormacao+valorMetas+valorEstudantes+valorTrio : 0;
+      const cor = !pronto ? "sem-resultado" : total >= 80 ? "verde" : total >= 50 ? "amarelo" : "vermelho";
+
+      document.getElementById("descricaoBonus").textContent = temBonus ? "Diário: 60% • Atingimento de Metas: 10%" : "Sem bônus: Diário passa para 70%";
+      document.getElementById("notaAtingimento").value = temBonus ? decimal(notaIcm) : "—";
+      document.getElementById("detalheDiario").textContent = "Peso: "+pesoDiario+"% • Valor no painel: "+decimal(valorDiario);
+      document.getElementById("detalheFormacao").textContent = "Peso: 10% • Valor no painel: "+decimal(valorFormacao);
+      document.getElementById("detalheMetas").textContent = temBonus ? "Peso: 10% • Valor no painel: "+decimal(valorMetas)+" • Ouro: 70 / Diamante: 100" : "Não se aplica no painel sem bônus";
+      document.getElementById("detalheEstudantes").textContent = "Peso: 10% • Valor no painel: "+decimal(valorEstudantes);
+      document.getElementById("detalheTrio").textContent = "Peso: 10% • Valor no painel: "+decimal(valorTrio);
+      const equacao = document.getElementById("equacaoFarol");
+      const erro = document.getElementById("erroFarol");
+      equacao.hidden = !pronto;
+      erro.hidden = pronto;
+      if (pronto) {
+        const parcelas = [
+          "("+numeroConta(diario)+" × "+pesoDiario+"%)",
+          "("+numeroConta(formacao)+" × 10%)",
+          ...(temBonus ? ["("+numeroConta(notaIcm)+" × 10%)"] : []),
+          "("+numeroConta(estudantes)+" × 10%)",
+          "("+numeroConta(trio)+" × 10%)"
+        ];
+        equacao.textContent = parcelas.join(" + ")+" = "+decimal(total)+"%";
+      }
+      document.getElementById("totalFarol").textContent = pronto ? decimal(total)+"%" : "—";
+      document.getElementById("corFarol").textContent = pronto ? cor.toUpperCase() : "PREENCHA AS NOTAS";
+      const painel = document.getElementById("painelFarol");
+      painel.className = "painel painel-farol "+cor;
+      const semaforo = document.getElementById("semaforo");
+      semaforo.setAttribute("aria-label",pronto ? "Farol "+cor : "Farol sem resultado");
+      semaforo.querySelectorAll(".luz").forEach(luz => luz.classList.toggle("acesa",luz.classList.contains(cor)));
+    }
+
+    document.getElementById("adicionar").onclick = () => { criarLinha(); calcular(); };
+    document.getElementById("limpar").onclick = () => carregar([["","","",""]]);
+    document.getElementById("meusDados").onclick = () => { carregar(exemplo); informar("Meus dados foram carregados."); };
+    document.getElementById("escolherArquivo").onclick = () => document.getElementById("arquivoExcel").click();
+    document.getElementById("abrirColagem").onclick = evento => {
+      const area = document.getElementById("areaColagem");
+      area.classList.toggle("aberta");
+      evento.currentTarget.textContent = area.classList.contains("aberta") ? "Fechar colagem" : "Copiar e colar";
+    };
+    document.getElementById("processarColagem").onclick = () => {
+      aplicarImportacao(separarTextoTabular(document.getElementById("dadosColados").value));
+    };
+    document.getElementById("arquivoExcel").onchange = async evento => {
+      const arquivo = evento.target.files[0];
+      if (!arquivo) return;
+      informar("Lendo "+arquivo.name+"...");
+      try {
+        if (/\.(csv|tsv|txt)$/i.test(arquivo.name)) {
+          aplicarImportacao(separarTextoTabular(await arquivo.text()));
+        } else {
+          const XLSX = await carregarLeitorExcel();
+          const pasta = XLSX.read(await arquivo.arrayBuffer(),{type:"array",cellDates:true});
+          const primeira = pasta.Sheets[pasta.SheetNames[0]];
+          aplicarImportacao(XLSX.utils.sheet_to_json(primeira,{header:1,defval:"",raw:false}));
+        }
+      } catch (erro) {
+        informar("Não consegui abrir o arquivo. Tente salvar como CSV ou copie e cole a tabela.");
+      } finally {
+        evento.target.value = "";
+      }
+    };
+    document.querySelectorAll(".input-farol").forEach(input => input.addEventListener("input",calcular));
+    document.getElementById("temBonus").addEventListener("change",calcular);
+    carregar(exemplo);
+  </script>
+</body>
+</html>
